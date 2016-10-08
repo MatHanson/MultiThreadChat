@@ -45,15 +45,30 @@ public class Server extends Application {
                     // Create and start a new thread for the connection
                     new Thread(new HandleAClient(socket, clientNo)).start();
 
+                    String connected = "Client " + clientNo + " has joined the chat\n";
+
                     Platform.runLater(() -> {
-                        // Display client connection
-                        ta.appendText("Client " + clientNo + " has joined the chat\n");
+                        // Display client connection on server
+                        ta.appendText(connected);
+                        // Let other clients know of the connection
+                        try {
+                            send(connected);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     });
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    public void send(String message) throws IOException {
+        for (HandleAClient client : ClientList) {
+            DataOutputStream outputToClient = new DataOutputStream(client.socket.getOutputStream());
+            outputToClient.writeUTF(message);
+        }
     }
 
     // Define the thread class for handling new connection
@@ -81,20 +96,22 @@ public class Server extends Application {
             try {
                 // Create data input and output streams
                 DataInputStream inputFromClient = new DataInputStream(socket.getInputStream());
-                DataOutputStream outputToClient = new DataOutputStream(socket.getOutputStream());
+
+                // Add client to the list
+                ClientList.add(this);
 
                 // Continuously serve the client
                 while (true) {
                     // Receive text from the client
                     String receivedText = inputFromClient.readUTF();
 
-                    // Add client to the list
-                    ClientList.add(this);
-
+                    String message = "Client " + this.getClientNo() + ": " + receivedText;
                     // Append text received from client to the server chat window
                     Platform.runLater(() -> {
-                        ta.appendText("Client " + this.getClientNo() + ": " + receivedText);
+                        ta.appendText(message);
                     });
+
+                    send(message);
 
                 }
             } catch (IOException e) {

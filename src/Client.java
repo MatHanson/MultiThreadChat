@@ -15,6 +15,7 @@ public class Client extends Application {
     // IO streams
     DataOutputStream toServer = null;
     DataInputStream fromServer = null;
+    Socket socket;
 
     @Override // Override the start method in the Application class
     public void start(Stage primaryStage) throws IOException {
@@ -44,10 +45,7 @@ public class Client extends Application {
         // Connect to the server
         try {
             // Create a socket to connect to the server
-            Socket socket = new Socket("localhost", 8000);
-
-            // Create an input stream to receive data from the server
-            fromServer = new DataInputStream(socket.getInputStream());
+            socket = new Socket("localhost", 8000);
 
             // Create an output stream to send data to the server
             toServer = new DataOutputStream(socket.getOutputStream());
@@ -76,17 +74,20 @@ public class Client extends Application {
             }
         });
 
-        // This was my attempt but not sure if this was the issue, or the server end
+        // Create thread to receive messages
         new Thread(() -> {
             try {
-                while(!fromServer.readUTF().equals("")) {
+                while(true) {
+                    // Create an input stream to receive data from the server
+                    fromServer = new DataInputStream(socket.getInputStream());
+
                     String text = fromServer.readUTF();
                     chatWindow.appendText(text);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        });
+        }).start();
 
 
 
