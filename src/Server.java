@@ -49,7 +49,6 @@ public class Server extends Application {
                         // Display client connection
                         ta.appendText("Client " + clientNo + " has joined the chat\n");
                     });
-
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -62,17 +61,17 @@ public class Server extends Application {
         private Socket socket; // A connected socket
         private int clientNo;
 
-        public String getClientNo() {
-            String clientNumber = String.valueOf(this.clientNo);
-            return clientNumber;
-        }
-
         /**
          * Construct a thread
          */
         public HandleAClient(Socket socket, int clientNo) {
             this.socket = socket;
             this.clientNo = clientNo;
+        }
+
+        public String getClientNo() {
+            String clientNumber = String.valueOf(this.clientNo);
+            return clientNumber;
         }
 
         /**
@@ -89,21 +88,14 @@ public class Server extends Application {
                     // Receive text from the client
                     String receivedText = inputFromClient.readUTF();
 
+                    // Add client to the list
                     ClientList.add(this);
 
+                    // Append text received from client to the server chat window
                     Platform.runLater(() -> {
-                        ta.appendText(receivedText);
+                        ta.appendText("Client " + this.getClientNo() + ": " + receivedText);
                     });
 
-                    Platform.runLater(() -> {
-                       for(int x = 0; x < ClientList.size(); x++) {
-                           try {
-                               outputToClient.writeUTF(receivedText);
-                           } catch (IOException e) {
-                               e.printStackTrace();
-                           }
-                       }
-                    });
                 }
             } catch (IOException e) {
                 e.printStackTrace();
